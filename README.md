@@ -1,4 +1,4 @@
-# tty_serial
+# tty-serial
 
 Serial ports (/dev/tty*) on rooted Android kiosk boards without the NDK, with a TCN vending driver-board library. Supports Android 4.4 (API 19).
 
