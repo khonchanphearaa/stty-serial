@@ -1,58 +1,53 @@
 package com.eroxii.tty_serial;
 
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-
 /**
- * @SerialPort
- * A serial device node opened as a plain file and config with stty
- * So no native code is needed, Not thread-safe: [PortHandle] run every call on
- * the port's own thread, Ported from the vending app's [SerialPort]
+ * A serial device node opened as a plain file and configured with stty, so
+ * no native code is needed. Not thread-safe: PortHandle runs every call on
+ * the port's own thread. Ported from the vending app's SerialPort.
  */
 final class SerialPort {
-    
+
     private final String path;
     private final FileInputStream in;
     private final FileOutputStream out;
     private final PortRegistry registry;
     private boolean closed;
 
-    private SerialPort(String path, FileInputStream in, FileOutputStream out, PortRegistry registry){
+    private SerialPort(String path, FileInputStream in, FileOutputStream out, PortRegistry registry) {
         this.path = path;
         this.in = in;
         this.out = out;
         this.registry = registry;
     }
 
-
-    /** [Device] must come from PortPath.check, Blocks while stty (and maybe su) run*/
-    static SerialPort open(File device, SerialConfig config, PortRegistry registry) throws SerialError{
-        String p = device.getPath();
-        registry.claim(p);
+    /** [device] must come from PortPaths.check. Blocks while stty (and maybe su) runs. */
+    static SerialPort open(File device, SerialConfig config, PortRegistry registry) throws SerialError {
+        String path = device.getPath();
+        registry.claim(path);
         FileOutputStream out = null;
         FileInputStream in = null;
-
         try {
             out = new FileOutputStream(device);
             in = new FileInputStream(device);
-        } catch (Exception e) {
+        } catch (IOException e) {
             closeQuietly(in);
             closeQuietly(out);
-            registry.release(p);
+            registry.release(path);
             String code = device.exists() ? SerialError.IO : SerialError.NOT_FOUND;
+            throw new SerialError(code, "Could not open " + path + ": " + e.getMessage());
         }
-        
-        SerialPort port = new SerialPort(p, in, out, registry);
+        SerialPort port = new SerialPort(path, in, out, registry);
         try {
-            // While our file descriptor is open: when the last one closes
-            // the driver may reset the line settings
-            Stty.shared().configure(p, config);
-        } catch (Exception e) {
+            // While our file descriptor is open: when the last one closes,
+            // the driver may reset the line settings.
+            Stty.shared().configure(path, config);
+        } catch (SerialError e) {
             port.close();
             throw e;
         }
@@ -97,5 +92,4 @@ final class SerialPort {
             // Nothing useful to do: the port is being given up anyway.
         }
     }
-
 }
