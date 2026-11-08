@@ -1,0 +1,16 @@
+# pub reads this file instead of .gitignore, so it repeats those rules.
+*.class
+*.log
+*.iml
+*.ipr
+*.iws
+.idea/
+.dart_tool/
+build/
+/pubspec.lock
+**/doc/api/
+local.properties
+
+# Internal working notes, not part of the package.
+/CLAUDE.md
+/docs/
