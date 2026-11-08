@@ -1,10 +1,8 @@
 package com.eroxii.tty_serial;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 
 /**
  * Runs one command and gives up after a timeout. A stalled su (for example
